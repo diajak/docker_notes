@@ -1,0 +1,276 @@
+DOCKER REFRESHER
+
+using dockerfilr
+
+create a file on your java project folder , with a namen Dockerfile
+
+#start with the base image containing Java runtime
+FROM openjdk:17-jdk-slim
+
+#Information who maintains the image
+MAINTAINER easybytes.com
+
+
+#Add the application's jar to the image
+COPY target/accounts-0.0.1-SNAPSHOT.jar accounts-0.0.1-SNAPSHOT.jar
+
+#execuet the application
+ENTRYPOINT ["java","-jar","acccounts-0.0.1-SNAPSHOT.jar"]
+
+docker inspect image d38bc7bdd15b 
+
+
+docker build . -t diazjak01/accounts-service:v1
+
+
+docker ps -a                # Lists containers (and tells you which images they are spun from)
+
+docker images               # Lists images 
+
+docker rm <container_id>    # Removes a stopped container
+
+docker rm -f <container_id> # Forces the removal of a running container (uses SIGKILL)
+
+docker rmi <image_id>       # Removes an image 
+                            # Will fail if there is a running instance of that image i.e. container
+
+docker rmi -f <image_id>    # Forces removal of image even if it is referenced in multiple repositories, 
+                            # i.e. same image id given multiple names/tags 
+                            # Will still fail if there is a docker container referencing image
+docker run -d -p 8080:880 diazjak01/accounts-service:v1
+
+
+docker run -d -p 8080:880 diazjak01/accounts-service:v1- run the container behind the scend without showing logs
+
+docker ps- check the current containers running
+
+docker ps -a to check all containers that currenlt and was run before
+
+docker start ea45a5312a0d0e11bef67d7de8ab478c13e192ad1c0bb206f96cbfd10af150ee
+
+docker stop ea45a5312a0d0e11bef67d7de8ab478c13e192ad1c0bb206f96cbfd10af150ee
+
+
+running a springboot app as container using dockerfile
+
+1. run a mvn clean install from the location wher the pom.xml is present to generate a .jar inside a target folder
+2. write instructions 	to docker inside a file with the name Dockerfile to generate a docker image
+
+*********using Buildpacks******************
+add <image>
+
+<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<image>
+						<name>diazjak01/${project.artifactId}:v1</name>
+					</image>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							
+							
+
+-  mvn spring-boot:build-image
+
+steps
+
+1. Add the configuration like mentioned  on the right hand side inside the pom.xml. Make sure to past
+the image name details.
+
+2. Run the maven command "mvn spring-boot:build-image from the location	where pom.xml is present to generate
+the docker image without the need of dockerfile
+
+3. Execute the docker command "docker run -p 8090:8090 easybytes/loans:v1. this will  start the docker 
+container based on the docker image name and port mapping provided
+
+
+
+*****GOOGLE JIB*****
+
+ <version>3.3.2</version> - use this version
+ 
+ 
+ https://github.com/GoogleContainerTools/jib- go tp this repo
+ https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin
+ 
+scroll down  select jib-maven-plugin for maven
+
+add this on pom.xml
+
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.3.2</version>
+				<configuration>
+					<to>
+						<image>diazjak01/${project.artifactId}:v1</image>
+					</to>
+				</configuration>
+			</plugin>
+
+
+Maven: See documentation for jib-maven-plugin.
+Gradle: See documentation for jib-gradle-plugin.
+Jib Core: A general-purpose container-building library for Java.
+Jib CLI: A command-line interface for building images that uses Jib Core.
+
+mvn compile jib:dockerBuild 
+
+or
+
+mvn compile jib:build
+
+ docker run -d -p 8090:8090 diazjak01/loans:v1
+ 
+ 
+ steps 
+ 
+ 1. Add the configuration, Make sure to pass the mmage name details.
+ 
+ 		<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.3.2</version>
+				<configuration>
+					<to>
+						<image>diazjak01/${project.artifactId}:v1</image>
+					</to>
+				</configuration>
+			</plugin>
+			
+2. Run the maven comman "mvn compile jib:dockerBuild from the location where
+pom.xml is present to generate the docker image with out the need of docker file
+
+Execute the docker comman "docker run -d -p 9000:9000 diazjak01/loans:v1". this 
+will start the docker container based on the docker image name and port mapping
+provided
+
+
+docker file disadvatage
+- ned to be expert or knowledgeable on creating instruction on docker file and follow all 
+prodcution standards and best practices by yourself.
+- docker fiel has to be maintained for all your microservices, 
+advanatge
+- can create custom requiremenst  and flexibility 
+
+
+****pushing docker images 	from local to remote docker hub repositories*****
+
+docker image push docker.io/diazjak01/loans:v1
+
+
+
+******DOCKER COMPOSE*******
+
+create a file name docker-compose.yml
+
+inside the file create instrcution
+
+services:
+  accounts:
+    image: "diazjak01/accounts-service:v1"
+    container_name: accounts_ms
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - easybank
+  loans:
+    image: "diazjak01/loans:v1"
+    container_name: loans_ms
+    ports:
+      - "8090:8090"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - easybank
+
+  cards:
+    image: "diazjak01/cards:v1"
+    container_name: cards_ms
+    ports:
+      - "9000:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - easybank
+networks:
+  easybank:
+    driver: "bridge"
+	
+
+then run command  docker compose up -d - run containers
+ docker compose down - remove and dleet your container
+ docker compose stop - stop containers without deleting
+ docker compose start
+ 
+ 
+***** docker commands*****
+
+docker images - list all docker images present in docker server
+docker image inspect [image-id] - display detailed image information for a givem image id
+
+docker image rm [image-id] remove one or mpre images for a given image ids
+
+docker build . -t [image-name] generate a docker image based on a docekr file
+
+docker run -p [hostport]:[containerport][image_name] start a docker container based on a given image
+
+docker ps show all running containers
+
+docker ps -a  show all containers including running and stopping
+
+docker container start [container-id] - start one or more stopped containers
+
+docker container pause [container-id] - pause all processes within one or more containers
+
+docker container unpause [container-id] - resume all processes within one or more containers
+
+docker container stop [container-id] stop one or more running containers
+
+docker container kill [container-id] - kill one or more running containers instantly
+
+docker container restart [container-id] - restart oen or more containers
+
+docker container inspect [container-id - inspect all the details for a given container id
+
+docker container logs [container-id] - fetch the logs of a given container id
+
+docker container logs -f [container-id] - to follow log output of a given container id
+
+docker rm [container-id] to remove one or more containers based on container id's 
+
+docker container prune - to remove all stopped containers
+
+docker image push [container_registry/username:tag] - to push an image from a container registry
+
+docker image pull [container_registry/username:tag] - to pull an image from a container registry
+
+docker image prune - to remove all unused images
+
+docker container stats - to show all containers statistics like cpu , memory . I/O usage
+
+docker system prune - remove stopped containers ,dangling images,and used networks , volumes , and cache
+
+docker rmi [image-id] - to remove one or more images based on image id
+
+docker login -u [username] - to login to docker hub container registry
+
+docker logout - to login out from docker hub container regsitry
+
+docker history [image-name] - display the intermediate layers and commands that were executed when building the image
+
+docker exec -it [container-id] sh - to open  a shell inside  a running container and execute commands
+docker compose up - create and start containers  based on docker compose file
+docker compose down - stop and remove containers for services defined in the compose file
